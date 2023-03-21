@@ -131,3 +131,10 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 USERNAME = None
 HASH = None
+
+from random import randint
+
+G = randint(1, 1000)
+P = randint(1, 1000)
+A = None
+a = None

@@ -10,6 +10,8 @@
 </br>
 </br>
 
+<h1>MD5</h1>
+
 <input type="" name="" id="keywordSearch1" placeholder="">
 <button id="md5" onclick="md5(this)">Получить метку</button>
 </br>MD5:
@@ -26,7 +28,20 @@
 </br>
 
 
+<h1>Протокол Диффи — Хеллмана</h1>
 
+
+<button onclick="generate_keys()">Поулчить ключи</button>
+</br>Ключи:
+<p id="keys"></p>
+
+<button onclick="generate_key()">Сгенерировать свой ключ и отправить для сверки</button>
+</br>Ключ b:
+<p id="key-b"></p>
+</br>Ключ K:
+<p id="key-k"></p>
+</br>Ответ ключа K от сервера:
+<p id="keygot"></p>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
@@ -34,11 +49,19 @@
 
 <script type="text/javascript">
     var ts = null;
+    var A = null;
+    var g = null;
+    var p = null;
+    var K = null;
+    var B = null;
+    var b = null;
+
     function send_ajax(url) {
         return fetch(url)
     }
 
     function md5($this) {
+        // получение хэша от сервера
         var val = $this.previousElementSibling.value;
         send_ajax('api/md5/' + val).then(
             function (response) {
@@ -51,19 +74,21 @@
                 }
             }
             ).then((data) => {
+                // хэш временная метка
                 ts = data.ts;
                 document.getElementById('md5p').innerText = ts;
         });
       }
 
     function md5password($this) {
+        // соединение зэшей от пароля и метки
         var password = $this.previousElementSibling.value;
         hash = CryptoJS.MD5(password).toString()
         document.getElementById('md5passw').innerText = hash;
         hash = CryptoJS.MD5(hash + ts).toString()
         document.getElementById('md5concat').innerText = hash;
 
-        
+        // отправка на сервер нового хэша
         send_ajax('api/md5-hash/' + hash).then(
             function (response) {
                 if (response.status == 404) {
@@ -76,9 +101,37 @@
         ).then((data) => {
             ts = data.ts;
         });
-      }
-    
-    function check_md5(ts) {
-
     }
-</script>
+
+
+    function generate_keys() {
+        // получение ключей от сервера
+        send_ajax('api/helman/').then(
+            response => response.json()
+        ).then((data) => {
+            A = data.A
+            p = data.p
+            g = data.g
+            document.getElementById('keys').innerText = "A=" + data.A + ', g=' + data.g + ', p=' + data.p;
+        });
+    }
+    
+    
+    function generate_key() {
+        // генерирование ключей и отправка на сервер
+        b  = Math.round(Math.random() * 100);
+        document.getElementById('key-b').innerText = "b=" + b;
+        
+        // получение ключа К от сервера
+        B = Math.pow(g, b) % p;
+        send_ajax('api/helman-calc/' + B).then(
+            response => response.json()
+            ).then((data) => {
+                K = data.K;
+                document.getElementById('keygot').innerText = "K=" + data.K;
+            }).then(() => {document.getElementById('key-k').innerText = "K=" + K;});
+        
+    }
+ 
+    
+    </script>
