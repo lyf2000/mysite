@@ -1,0 +1,84 @@
+
+  <form action="" method="post">
+    {% csrf_token %}
+    <table>
+    {{ form.as_table }}
+    </table>
+    <input type="submit" value="Регистрация">
+  </form>
+</br>
+</br>
+</br>
+
+<input type="" name="" id="keywordSearch1" placeholder="">
+<button id="md5" onclick="md5(this)">Получить метку</button>
+</br>MD5:
+<p id="md5p"></p>
+<input type="" name="" id="password" placeholder="Пароль">
+<button id="md5password" onclick="md5password(this)">Отправить хэш</button>
+</br>MD5 пароля:
+<p id="md5passw"></p>
+</br>md5 '( md5 'пароль' + md5 'число' )' :
+<p id="md5concat"></p>
+
+</br>
+</br>
+</br>
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
+
+
+<script type="text/javascript">
+    var ts = null;
+    function send_ajax(url) {
+        return fetch(url)
+    }
+
+    function md5($this) {
+        var val = $this.previousElementSibling.value;
+        send_ajax('api/md5/' + val).then(
+            function (response) {
+                if (response.status == 404) {
+                    alert('Не найден')
+                    document.getElementById('md5p').innerText = "";
+                }
+                else {
+                    return response.json()
+                }
+            }
+            ).then((data) => {
+                ts = data.ts;
+                document.getElementById('md5p').innerText = ts;
+        });
+      }
+
+    function md5password($this) {
+        var password = $this.previousElementSibling.value;
+        hash = CryptoJS.MD5(password).toString()
+        document.getElementById('md5passw').innerText = hash;
+        hash = CryptoJS.MD5(hash + ts).toString()
+        document.getElementById('md5concat').innerText = hash;
+
+        
+        send_ajax('api/md5-hash/' + hash).then(
+            function (response) {
+                if (response.status == 404) {
+                    alert('Не найден')
+                }
+                else {
+                    alert('Успех')
+                }
+            }
+        ).then((data) => {
+            ts = data.ts;
+        });
+      }
+    
+    function check_md5(ts) {
+
+    }
+</script>
